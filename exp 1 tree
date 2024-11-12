@@ -1,0 +1,19 @@
+% Family Tree
+parent(pam,bob).
+parent(tom,bob).
+parent(bob, ann).
+parent(bob,pat).
+parent(tom, liz).
+parent(pat, jim).
+
+
+% Relationships
+child(Y, X) :- parent(X, Y).
+
+
+grandparent(X, Y) :-
+    parent(X, Z),
+    parent(Z, Y).
+
+
+
