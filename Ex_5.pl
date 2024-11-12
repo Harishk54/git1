@@ -1,41 +1,40 @@
-% Define the jug capacities
-capacity(jug1, 4).
-capacity(jug2, 3).
+% Define the initial state and goal state
+initial_state((0,0)).   % Both jugs are empty at the start
+goal_state((4,_)).      % The goal is to have 4 liters in the 4-liter jug
 
-% Define the goal state
-goal(state(2, _)).
+% Define the capacity of the jugs (jug1: 4 liters, jug2: 3 liters)
+capacity_jug1(4).
+capacity_jug2(3).
 
-% Define the possible moves:
-% Fill a jug
-move(state(_, Y), fill(jug1), state(4, Y)).
-move(state(X, _), fill(jug2), state(X, 3)).
-
-% Empty a jug
-move(state(_, Y), empty(jug1), state(0, Y)).
-move(state(X, _), empty(jug2), state(X, 0)).
+% Possible moves:
+move((X,Y), (4,Y)) :- capacity_jug1(4), X < 4.  % Fill jug1 to full capacity
+move((X,Y), (X,3)) :- capacity_jug2(3), Y < 3.  % Fill jug2 to full capacity
+move((X,Y), (0,Y)) :- X > 0.                   % Empty jug1
+move((X,Y), (X,0)) :- Y > 0.                   % Empty jug2
 
 % Pour water from jug1 to jug2
-move(state(X, Y), pour(jug1, jug2), state(XNew, YNew)) :-
-    capacity(jug2, YMax),
-    Transfer is min(X, YMax - Y),
-    XNew is X - Transfer,
-    YNew is Y + Transfer.
+move((X,Y), (X1,Y1)) :-
+    X > 0,
+    Y < 3,
+    Z is min(X, 3 - Y),
+    X1 is X - Z,
+    Y1 is Y + Z.
 
 % Pour water from jug2 to jug1
-move(state(X, Y), pour(jug2, jug1), state(XNew, YNew)) :-
-    capacity(jug1, XMax),
-    Transfer is min(Y, XMax - X),
-    XNew is X + Transfer,
-    YNew is Y - Transfer.
+move((X,Y), (X1,Y1)) :-
+    Y > 0,
+    X < 4,
+    Z is min(Y, 4 - X),
+    X1 is X + Z,
+    Y1 is Y - Z.
 
-% Depth-first search to find a solution
-solve(State, _, []) :- goal(State).
-solve(State, Visited, [Move | Moves]) :-
-    move(State, Move, NextState),
-    \+ member(NextState, Visited),  % Avoid revisiting states
-    solve(NextState, [NextState | Visited], Moves).
+% Define a solution by searching for a sequence of moves from the initial state to the goal state
+solve(State, [State]) :- goal_state(State).
+solve(State, [State|RestOfMoves]) :-
+    move(State, NextState),
+    solve(NextState, RestOfMoves).
 
-% Initialize and find the solution
-water_jug_solution(Solution) :-
-    InitialState = state(0, 0),
-    solve(InitialState, [InitialState], Solution).
+% Start the solution
+start(Solution) :-
+    initial_state(StartState),
+    solve(StartState, Solution).
